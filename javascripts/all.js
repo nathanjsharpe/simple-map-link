@@ -3,6 +3,7 @@
  (c) 2010-2014 Google, Inc. http://angularjs.org
  License: MIT
 */
+
 (function(D,U,s){'use strict';function F(b){return function(){var a=arguments[0],c,a="["+(b?b+":":"")+a+"] http://errors.angularjs.org/1.3.0-beta.1/"+(b?b+"/":"")+a;for(c=1;c<arguments.length;c++)a=a+(1==c?"?":"&")+"p"+(c-1)+"="+encodeURIComponent("function"==typeof arguments[c]?arguments[c].toString().replace(/ \{[\s\S]*$/,""):"undefined"==typeof arguments[c]?"undefined":"string"!=typeof arguments[c]?JSON.stringify(arguments[c]):arguments[c]);return Error(a)}}function xb(b){if(null==b||za(b))return!1;
 var a=b.length;return 1===b.nodeType&&a?!0:y(b)||I(b)||0===a||"number"===typeof a&&0<a&&a-1 in b}function r(b,a,c){var d;if(b)if(O(b))for(d in b)"prototype"==d||("length"==d||"name"==d||b.hasOwnProperty&&!b.hasOwnProperty(d))||a.call(c,b[d],d);else if(b.forEach&&b.forEach!==r)b.forEach(a,c);else if(xb(b))for(d=0;d<b.length;d++)a.call(c,b[d],d);else for(d in b)b.hasOwnProperty(d)&&a.call(c,b[d],d);return b}function Sb(b){var a=[],c;for(c in b)b.hasOwnProperty(c)&&a.push(c);return a.sort()}function Zc(b,
 a,c){for(var d=Sb(b),e=0;e<d.length;e++)a.call(c,b[d[e]],d[e]);return d}function Tb(b){return function(a,c){b(c,a)}}function ab(){for(var b=ia.length,a;b;){b--;a=ia[b].charCodeAt(0);if(57==a)return ia[b]="A",ia.join("");if(90==a)ia[b]="0";else return ia[b]=String.fromCharCode(a+1),ia.join("")}ia.unshift("0");return ia.join("")}function Ub(b,a){a?b.$$hashKey=a:delete b.$$hashKey}function t(b){var a=b.$$hashKey;r(arguments,function(a){a!==b&&r(a,function(a,c){b[c]=a})});Ub(b,a);return b}function R(b){return parseInt(b,
@@ -207,3 +208,122 @@ isString:y,isFunction:O,isObject:X,isNumber:yb,isElement:$c,isArray:I,version:fe
 ngCloak:Ce,ngController:De,ngForm:me,ngHide:Me,ngIf:Ee,ngInclude:Fe,ngInit:He,ngNonBindable:Ie,ngPluralize:Je,ngRepeat:Ke,ngShow:Le,ngStyle:Ne,ngSwitch:Oe,ngSwitchWhen:Pe,ngSwitchDefault:Qe,ngOptions:Ue,ngTransclude:Re,ngModel:re,ngList:te,ngChange:se,required:Xc,ngRequired:Xc,ngValue:ve}).directive({ngInclude:Ge}).directive(Qb).directive(Yc);a.provider({$anchorScroll:nd,$animate:he,$browser:qd,$cacheFactory:rd,$controller:ud,$document:vd,$exceptionHandler:wd,$filter:Fc,$interpolate:Bd,$interval:Cd,
 $http:xd,$httpBackend:zd,$location:Fd,$log:Gd,$parse:Jd,$rootScope:Nd,$q:Kd,$sce:Rd,$sceDelegate:Qd,$sniffer:Sd,$templateCache:sd,$timeout:Td,$window:Ud,$$rAF:Md,$$asyncCallback:od})}])})(Ca);z(U).ready(function(){cd(U,bc)})})(window,document);!angular.$$csp()&&angular.element(document).find("head").prepend('<style type="text/css">@charset "UTF-8";[ng\\:cloak],[ng-cloak],[data-ng-cloak],[x-ng-cloak],.ng-cloak,.x-ng-cloak,.ng-hide{display:none !important;}ng\\:form{display:block;}.ng-animate-block-transitions{transition:0s all!important;-webkit-transition:0s all!important;}</style>');
 //# sourceMappingURL=angular.min.js.map
+;
+(function() {
+  var app;
+
+  app = angular.module('simplemaplink', []);
+
+  app.controller('MainCtrl', function($scope, Geocoder, GoogleMap) {
+    $scope.getCoords = function() {
+      return Geocoder.geocode({
+        address: $scope.address
+      }, function(results, status) {
+        $scope.geocodeResults = results;
+        if (results.length === 1) {
+          $scope.selectResult(results[0]);
+        }
+        return $scope.$apply();
+      });
+    };
+    $scope.selectResult = function(result) {
+      if ($scope.selectedResult !== result) {
+        $scope.selectedResult = result;
+        GoogleMap.setLocation(result.geometry.location);
+        GoogleMap.create();
+        GoogleMap.addMarker();
+        if ($scope.placeSearch) {
+          return $scope.findPlaces();
+        }
+      }
+    };
+    $scope.findPlaces = function() {
+      return GoogleMap.textSearch($scope.placeSearch, function(results, status) {
+        $scope.placeResults = results;
+        return $scope.$apply();
+      });
+    };
+    $scope.selectPlace = function(place) {
+      $scope.selectedPlace = place;
+      console.log(place);
+      return $scope.makeLink(place);
+    };
+    $scope.cleanAddress = function(address) {
+      return address.replace(/, United States/, '').replace(/,/g, '').replace(/\W/g, '+');
+    };
+    $scope.makeLink = function(place) {
+      $scope.linkDisplayed = true;
+      return $scope.placeAddress = $scope.cleanAddress($scope.selectedPlace.formatted_address);
+    };
+    return $scope.reset = function() {
+      $scope.address = '';
+      $scope.placeSearch = '';
+      $scope.linkDisplayed = false;
+      $scope.geocodeResults = [];
+      $scope.placeResults = [];
+      $scope.selectedResult = null;
+      $scope.selectedPlace = null;
+      return $scope.placeAddress = '';
+    };
+  });
+
+  app.factory('Geocoder', function() {
+    var geocoder;
+    return geocoder = new google.maps.Geocoder();
+  });
+
+  app.factory('GoogleMap', function() {
+    var GoogleMap, location, map, places;
+    location = null;
+    map = null;
+    places = null;
+    return GoogleMap = {
+      setLocation: function(latLng) {
+        return location = latLng;
+      },
+      create: function(position, zoom) {
+        if (position == null) {
+          position = location;
+        }
+        if (zoom == null) {
+          zoom = 15;
+        }
+        map = new google.maps.Map(document.getElementById("map-canvas"), {
+          center: location,
+          zoom: zoom
+        });
+        return places = new google.maps.places.PlacesService(map);
+      },
+      addMarker: function(position) {
+        var marker;
+        if (position == null) {
+          position = location;
+        }
+        return marker = new google.maps.Marker({
+          map: map,
+          position: position
+        });
+      },
+      map: function() {
+        return map;
+      },
+      nearbySearch: function(keyword, callback) {
+        return places.nearbySearch({
+          location: location,
+          radius: 5000,
+          keyword: keyword
+        }, callback);
+      },
+      textSearch: function(query, callback) {
+        return places.textSearch({
+          location: location,
+          radius: 5000,
+          query: query
+        }, callback);
+      }
+    };
+  });
+
+}).call(this);
+
+
