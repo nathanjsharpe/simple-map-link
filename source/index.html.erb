@@ -1,0 +1,80 @@
+---
+title: Welcome to Middleman
+---
+
+<div ng-controller="MainCtrl">
+  <div class="row">
+    <div class="col-md-6">
+      <h2>
+        <span class="fa-stack fa-lg">
+          <i class="fa fa-circle fa-stack-2x"></i>
+          <i class="fa fa-map-marker fa-stack-1x fa-inverse"></i>
+        </span>
+        Where are you?
+      </h2>
+
+      <form ng-submit="getCoords()">
+        <div class="input-group">
+          <input type="text" ng-model="address" placeholder="Your address" class="form-control">
+          <span class="input-group-btn">
+            <button type="submit" class="btn btn-primary">Where am I?</button>
+          </span>
+        </div>
+      </form>
+
+      <div class="geocode-results results-list">
+        <ul>
+          <li class="result" ng-repeat="result in geocodeResults" ng-class="{selected: result == selectedResult}" ng-show="result == selectedResult || !linkDisplayed">
+            <a href="" ng-click="selectResult(result)">{{result.formatted_address}}</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="col-md-6" ng-show="selectedResult">
+      <h2>
+        <span class="fa-stack fa-lg">
+          <i class="fa fa-circle fa-stack-2x"></i>
+          <i class="fa fa-building-o fa-stack-1x fa-inverse"></i>
+        </span>
+        What are you looking for?
+      </h2>
+
+      <form ng-submit="findPlaces()">
+        <div class="input-group">
+          <input type="text" class="form-control" ng-model="placeSearch" placeholder="Type a search term, like 'restaurant'">
+          <span class="input-group-btn">
+            <button class="btn btn-primary">What is around?</button>
+          </span>
+        </div>
+      </form>
+
+      <div class="place-results results-list">
+        <ul>
+          <li class="result" ng-repeat="result in placeResults" ng-class="{selected: result == selectedPlace}" ng-show="result == selectedPlace || !linkDisplayed">
+            <a href="" ng-click="selectPlace(result)">{{result.name}}<br>{{result.formatted_address}}</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="row" ng-show="linkDisplayed">
+    <div class="col-md-12">
+      <h2>
+        SHARE ON FACEBOOK? OR GOOGLE PLUS?<br>
+        <span class="fa-stack fa-lg">
+          <i class="fa fa-circle fa-stack-2x"></i>
+          <i class="fa fa-chain fa-stack-1x fa-inverse"></i>
+        </span>
+        Just kidding. Here's your link to {{selectedPlace.name}}.
+      </h2>
+      <p>https://www.google.com/maps/place/{{placeAddress}}/@{{selectedPlace.geometry.location.lat() | number:7}},{{selectedPlace.geometry.location.lng() | number:7}},17z</p>
+
+      <a href="" ng-click="linkDisplayed = false" class="btn btn-danger">Oops! This isn't the right place!</a>
+      <a href="" ng-click="reset()" class="btn btn-primary">Enough! Let's start over!</a>
+    </div>
+  </div>
+
+  <div id="map-canvas"></div>
+</div>
